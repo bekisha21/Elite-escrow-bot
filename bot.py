@@ -14,7 +14,11 @@ import os
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-PROOF_CHANNEL = "@etescrowproof"
+if not TOKEN:
+    print("❌ BOT_TOKEN missing in Railway Variables")
+    exit()
+
+PROOF_CHANNEL = "@eliteescrowproof"
 
 ADMINS = [8216037421, 5635739078, 7986300943, 6632452285, 6953440368]
 
@@ -110,9 +114,9 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     d = deals[did]
     time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    escrow_admin = update.effective_user.username
-    if escrow_admin is None:
-        escrow_admin = "unknown"
+    username = update.effective_user.username
+    if not username:
+        username = "unknown"
 
     message = f"""
 ━━━━━━━━━━━━━━
@@ -125,7 +129,7 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 💰 Amount: {d['amount']}
 📝 Details: {d['details']}
 
-🛡 Escrow Agent: @{escrow_admin}
+🛡 Escrow Agent: @{username}
 
 📅 {time}
 
@@ -181,7 +185,7 @@ async def refund(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=markup
     )
 
-    await update.message.reply_text("🚨 Refund sent")
+    await update.message.reply_text("🚨 Refund sent for review")
 
 
 # =========================
@@ -194,37 +198,4 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
 
-    if user_id not in ADMINS:
-        return await query.edit_message_text("❌ Not allowed")
-
-    data = query.data
-    action, did = data.split("_")
-
-    if did not in refunds:
-        return await query.edit_message_text("❌ Not found")
-
-    if action == "approve":
-        refunds[did]["status"] = "APPROVED"
-        await query.edit_message_text("✅ REFUND APPROVED")
-
-    elif action == "reject":
-        refunds[did]["status"] = "REJECTED"
-        await query.edit_message_text("❌ REFUND REJECTED")
-
-
-# =========================
-# BOT START
-# =========================
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("deal", deal))
-app.add_handler(CommandHandler("done", done))
-app.add_handler(CommandHandler("confirm", confirm))
-app.add_handler(CommandHandler("refund", refund))
-app.add_handler(CallbackQueryHandler(button_handler))
-
-print("✅ Escrow Bot Online")
-
-app.run_polling()    
+    if user_id not
