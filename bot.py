@@ -14,7 +14,7 @@ import os
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-PROOF_CHANNEL = "@eliteescrowproof"
+PROOF_CHANNEL = "@etescrowproof"
 
 ADMINS = [8216037421, 5635739078, 7986300943, 6632452285, 6953440368]
 
@@ -227,4 +227,4 @@ app.add_handler(CallbackQueryHandler(button_handler))
 
 print("✅ Escrow Bot Online")
 
-app.run_polling()
+app.run_polling()    
