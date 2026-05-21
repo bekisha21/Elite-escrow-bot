@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from datetime import datetime
 import os
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("8629645529:AAH408dGVS89xgVRxFM-ReV-YuhiUZwuJ5I")
 PROOF_CHANNEL = "@elieescrowproof"
 
 deal_counter = 0
