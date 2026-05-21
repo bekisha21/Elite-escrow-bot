@@ -14,7 +14,7 @@ TOKEN = os.getenv("BOT_TOKEN")
 PROOF_CHANNEL = "@eliteescrowproof"
 
 # Your Telegram ID(s)
-ADMINS = [123456789]
+ADMINS = [5635739078]
 
 # Deal counter
 deal_counter = 0
