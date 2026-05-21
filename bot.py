@@ -1,27 +1,48 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes
+)
 from datetime import datetime
 import os
 
+# Railway BOT TOKEN
 TOKEN = os.getenv("BOT_TOKEN")
-PROOF_CHANNEL = "@elieescrowproof"
 
+# Your public proof channel username
+PROOF_CHANNEL = "@eliteescrowproof"
+
+# Your Telegram ID(s)
+ADMINS = [123456789]
+
+# Deal counter
 deal_counter = 0
-ADMINS = [5635739078]  # replace with your Telegram ID
+
 
 def is_admin(user_id):
     return user_id in ADMINS
 
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✅ Escrow Bot Online")
+
+
 async def save(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global deal_counter
 
-    if not is_admin(update.effective_user.id):
+    user_id = update.effective_user.id
+
+    # Admin check
+    if not is_admin(user_id):
         await update.message.reply_text("❌ Not allowed")
         return
 
+    # Command format check
     if len(context.args) < 3:
-        await update.message.reply_text("Usage: /save @buyer @seller amount details")
+        await update.message.reply_text(
+            "Usage:\n/save @buyer @seller amount details"
+        )
         return
 
     deal_counter += 1
@@ -33,11 +54,11 @@ async def save(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    msg = f"""
+    message = f"""
 ━━━━━━━━━━━━━━
 💼 ESCROW PROOF
 
-🆔 #{deal_counter:04d}
+🆔 Deal ID: #{deal_counter:04d}
 👤 Buyer: {buyer}
 👤 Seller: {seller}
 💰 Amount: {amount}
@@ -48,11 +69,26 @@ async def save(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━
 """
 
-    await context.bot.send_message(chat_id=PROOF_CHANNEL, text=msg)
-    await update.message.reply_text(f"Saved ✔ #{deal_counter:04d}")
+    # Send proof to channel
+    await context.bot.send_message(
+        chat_id=PROOF_CHANNEL,
+        text=message
+    )
+
+    # Reply in group
+    await update.message.reply_text(
+        f"✅ Deal saved #{deal_counter:04d}"
+    )
 
 
+# Build bot
 app = ApplicationBuilder().token(TOKEN).build()
+
+# Commands
+app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("save", save))
 
+print("✅ Escrow Bot Online")
+
+# Run bot
 app.run_polling()
