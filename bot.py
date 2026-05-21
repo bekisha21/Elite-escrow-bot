@@ -2,8 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
-    ContextTypes,
-    CallbackQueryHandler
+    CallbackQueryHandler,
+    ContextTypes
 )
 from datetime import datetime
 import os
@@ -15,10 +15,11 @@ import os
 TOKEN = os.getenv("BOT_TOKEN")
 
 PROOF_CHANNEL = "@eliteescrowproof"
-ADMINS = [8216037421,5635739078,7986300943,6632452285,6953440368]
+
+ADMINS = [8216037421, 5635739078, 7986300943, 6632452285, 6953440368]
 
 # =========================
-# STORAGE (temporary memory)
+# STORAGE
 # =========================
 
 deals = {}
@@ -39,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# CREATE DEAL
+# DEAL CREATE
 # =========================
 
 async def deal(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,11 +85,11 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     deals[did]["status"] = "WAITING ESCROW"
 
-    await update.message.reply_text(f"⏳ Deal #{int(did):04d} marked as DONE")
+    await update.message.reply_text(f"⏳ Deal #{int(did):04d} marked DONE")
 
 
 # =========================
-# CONFIRM (FINAL ESCROW POST)
+# CONFIRM (FINAL POST)
 # =========================
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,12 +105,14 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("❌ Deal not found")
 
     if deals[did]["status"] != "WAITING ESCROW":
-        return await update.message.reply_text("❌ Deal not ready for confirmation")
+        return await update.message.reply_text("❌ Deal not ready")
 
     d = deals[did]
     time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     escrow_admin = update.effective_user.username
+    if escrow_admin is None:
+        escrow_admin = "unknown"
 
     message = f"""
 ━━━━━━━━━━━━━━
@@ -131,11 +134,11 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
 
     await context.bot.send_message(PROOF_CHANNEL, message)
-    await update.message.reply_text("✅ Deal confirmed & posted")
+    await update.message.reply_text("✅ Posted to channel")
 
 
 # =========================
-# REFUND REQUEST (WITH BUTTONS)
+# REFUND REQUEST
 # =========================
 
 async def refund(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -155,8 +158,8 @@ async def refund(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [
-            InlineKeyboardButton("✅ Approve Refund", callback_data=f"approve_{did}"),
-            InlineKeyboardButton("❌ Reject Refund", callback_data=f"reject_{did}")
+            InlineKeyboardButton("✅ Approve", callback_data=f"approve_{did}"),
+            InlineKeyboardButton("❌ Reject", callback_data=f"reject_{did}")
         ]
     ]
 
@@ -168,9 +171,9 @@ async def refund(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🚨 REFUND REQUEST
 
 🆔 Deal #{int(did):04d}
-👤 Buyer: {deals[did]['buyer']}
-👤 Seller: {deals[did]['seller']}
-💰 Amount: {deals[did]['amount']}
+👤 Buyer: {d['buyer']}
+👤 Seller: {d['seller']}
+💰 Amount: {d['amount']}
 📝 Reason: {reason}
 
 ⚠ Pending admin decision
@@ -178,7 +181,7 @@ async def refund(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=markup
     )
 
-    await update.message.reply_text("🚨 Refund sent for approval")
+    await update.message.reply_text("🚨 Refund sent")
 
 
 # =========================
@@ -192,21 +195,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
 
     if user_id not in ADMINS:
-        return await query.edit_message_text("❌ Not authorized")
+        return await query.edit_message_text("❌ Not allowed")
 
     data = query.data
     action, did = data.split("_")
 
     if did not in refunds:
-        return await query.edit_message_text("❌ Refund not found")
+        return await query.edit_message_text("❌ Not found")
 
     if action == "approve":
         refunds[did]["status"] = "APPROVED"
-        await query.edit_message_text("✅ Refund APPROVED")
+        await query.edit_message_text("✅ REFUND APPROVED")
 
     elif action == "reject":
         refunds[did]["status"] = "REJECTED"
-        await query.edit_message_text("❌ Refund REJECTED")
+        await query.edit_message_text("❌ REFUND REJECTED")
 
 
 # =========================
@@ -224,31 +227,4 @@ app.add_handler(CallbackQueryHandler(button_handler))
 
 print("✅ Escrow Bot Online")
 
-app.run_polling()
-✅ COMPLETED
-━━━━━━━━━━━━━━
-"""
-
-    # Send proof to channel
-    await context.bot.send_message(
-        chat_id=PROOF_CHANNEL,
-        text=message
-    )
-
-    # Reply in group
-    await update.message.reply_text(
-        f"✅ Deal saved #{deal_counter:04d}"
-    )
-
-
-# Build bot
-app = ApplicationBuilder().token(TOKEN).build()
-
-# Commands
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("save", save))
-
-print("✅ Escrow Bot Online")
-
-# Run bot
 app.run_polling()
