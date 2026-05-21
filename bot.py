@@ -4,10 +4,10 @@ from datetime import datetime
 import os
 
 TOKEN = os.getenv("BOT_TOKEN")
-PROOF_CHANNEL = "@yourchannel"
+PROOF_CHANNEL = "@elieescrowproof"
 
 deal_counter = 0
-ADMINS = [123456789]  # replace with your Telegram ID
+ADMINS = [5635739078]  # replace with your Telegram ID
 
 def is_admin(user_id):
     return user_id in ADMINS
